@@ -1,6 +1,5 @@
 import bot from "./assets/bot.svg";
 import user from "./assets/user.svg";
-import { v4 as uuidv4 } from "uuid";
 
 const form = document.querySelector("form");
 const chatContainer = document.querySelector("#chat_container");
@@ -36,7 +35,11 @@ function typeText(element, text) {
 }
 
 function generateUniqueId() {
-  return `id-${uuidv4()}`;
+  const timestamp = Date.now();
+  const randomNumber = Math.random();
+  const hexadecimalString = randomNumber.toString(16);
+
+  return `id-${timestamp}-${hexadecimalString}`;
 }
 
 function chatStripe(isAi, value, uniqueId) {
@@ -106,11 +109,11 @@ form.addEventListener("keyup", (e) => {
   }
 });
 
-// Function to stop generating further responses
-function stopGeneratingResponses() {
-  stopSignal = true;
-}
+// // Function to stop generating further responses
+// function stopGeneratingResponses() {
+//   stopSignal = true;
+// }
 
-// Event listener for stop button
-const stopButton = document.getElementById("stop-button");
-stopButton.addEventListener("click", stopGeneratingResponses);
+// // Event listener for stop button
+// const stopButton = document.getElementById("stop-button");
+// stopButton.addEventListener("click", stopGeneratingResponses);

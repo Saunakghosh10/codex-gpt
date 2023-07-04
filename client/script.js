@@ -1,5 +1,6 @@
 import bot from "./assets/bot.svg";
 import user from "./assets/user.svg";
+import { v4 as uuidv4 } from "uuid";
 
 const form = document.querySelector("form");
 const chatContainer = document.querySelector("#chat_container");
@@ -35,11 +36,7 @@ function typeText(element, text) {
 }
 
 function generateUniqueId() {
-  const timestamp = Date.now();
-  const randomNumber = Math.random();
-  const hexadecimalString = randomNumber.toString(16);
-
-  return `id-${timestamp}-${hexadecimalString}`;
+  return `id-${uuidv4()}`;
 }
 
 function chatStripe(isAi, value, uniqueId) {

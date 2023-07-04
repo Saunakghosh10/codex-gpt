@@ -29,13 +29,13 @@ app.post("/", async (req, res) => {
       model: "text-davinci-003", // Choose a model suitable for your use case
       prompt: `${prompt}`,
       temperature: 0.6, // Adjust the temperature according to your needs
-      max_tokens: 3000, // Adjust the number of max tokens according to your needs
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0.6, // Adjust the presence penalty according to your needs
+      maxTokens: 3000, // Adjust the number of max tokens according to your needs
+      topP: 1,
+      frequencyPenalty: 0,
+      presencePenalty: 0.6, // Adjust the presence penalty according to your needs
     });
 
-    const botResponse = response.data.choices[0]?.text?.trim();
+    const botResponse = response.data.choices?.[0]?.text?.trim();
 
     if (botResponse) {
       res.status(200).json({

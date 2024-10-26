@@ -8,12 +8,8 @@ let loadInterval;
 
 function loader(element) {
   element.textContent = "";
-
   loadInterval = setInterval(() => {
-    // Update the text content of the loading indicator
     element.textContent += ".";
-
-    // If the loading indicator has reached three dots, reset it
     if (element.textContent === "....") {
       element.textContent = "";
     }
@@ -22,7 +18,6 @@ function loader(element) {
 
 function typeText(element, text) {
   let index = 0;
-
   let interval = setInterval(() => {
     if (index < text.length) {
       element.innerHTML += text.charAt(index);
@@ -33,86 +28,112 @@ function typeText(element, text) {
   }, 20);
 }
 
-// generate unique ID for each message div of bot
-// necessary for typing text effect for that specific reply
-// without unique ID, typing text will work on every element
 function generateUniqueId() {
   const timestamp = Date.now();
   const randomNumber = Math.random();
   const hexadecimalString = randomNumber.toString(16);
-
   return `id-${timestamp}-${hexadecimalString}`;
 }
 
 function chatStripe(isAi, value, uniqueId) {
   return `
-        <div class="wrapper ${isAi && "ai"}">
-            <div class="chat">
-                <div class="profile">
-                    <img 
-                      src=${isAi ? bot : user} 
-                      alt="${isAi ? "bot" : "user"}" 
-                    />
-                </div>
-                <div class="message" id=${uniqueId}>${value}</div>
-            </div>
-        </div>
-    `;
+    <div class="flex ${isAi ? 'justify-start' : 'justify-end'} mb-4">
+      <div class="${isAi ? 'bg-ai-msg' : 'bg-user-msg'} rounded-lg p-3 max-w-[70%] shadow-md ${isAi ? 'text-gray-800' : 'text-gray-900'}">
+        <p class="text-sm" id=${uniqueId}>${value}</p>
+      </div>
+    </div>
+  `;
 }
 
 const handleSubmit = async (e) => {
   e.preventDefault();
 
   const data = new FormData(form);
+  const prompt = data.get("prompt").trim();
+
+  if (!prompt) return;
 
   // user's chatstripe
-  chatContainer.innerHTML += chatStripe(false, data.get("prompt"));
-
-  // to clear the textarea input
+  chatContainer.innerHTML += chatStripe(false, prompt);
   form.reset();
 
   // bot's chatstripe
   const uniqueId = generateUniqueId();
   chatContainer.innerHTML += chatStripe(true, " ", uniqueId);
-
-  // to focus scroll to the bottom
   chatContainer.scrollTop = chatContainer.scrollHeight;
 
-  // specific message div
   const messageDiv = document.getElementById(uniqueId);
-
-  // messageDiv.innerHTML = "..."
   loader(messageDiv);
 
-  const response = await fetch("https://codex-ai-mc3n.onrender.com/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      prompt: data.get("prompt"),
-    }),
-  });
+  try {
+    const response = await fetch("http://localhost:5000/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt }),
+    });
 
-  clearInterval(loadInterval);
-  messageDiv.innerHTML = " ";
+    clearInterval(loadInterval);
+    messageDiv.innerHTML = "";
 
-  if (response.ok) {
-    const data = await response.json();
-    const parsedData = data.bot.trim(); // trims any trailing spaces/'\n'
+    if (response.ok) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
 
-    typeText(messageDiv, parsedData);
-  } else {
-    const err = await response.text();
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
 
-    messageDiv.innerHTML = "Something went wrong";
-    alert(err);
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const eventData = line.slice(6).trim();
+            if (eventData === '[DONE]') {
+              break;
+            } else {
+              try {
+                const jsonData = JSON.parse(eventData);
+                if (jsonData.text) {
+                  messageDiv.innerHTML += jsonData.text;
+                }
+              } catch (error) {
+                console.error('Error parsing JSON:', error);
+              }
+            }
+          }
+        }
+      }
+    } else {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      messageDiv.innerHTML = `Error: ${errorText}`;
+    }
+  } catch (error) {
+    clearInterval(loadInterval);
+    console.error('Fetch error:', error);
+    messageDiv.innerHTML = `Error: ${error.message}`;
   }
 };
 
 form.addEventListener("submit", handleSubmit);
 form.addEventListener("keyup", (e) => {
-  if (e.keyCode === 13) {
+  if (e.key === 'Enter' && !e.shiftKey) {
     handleSubmit(e);
   }
 });
+
+// Add textarea auto-resize
+const textarea = document.querySelector('textarea');
+textarea.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = (this.scrollHeight) + 'px';
+});
+
+// Add this code instead
+const observer = new MutationObserver(() => {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+});
+observer.observe(chatContainer, { childList: true });

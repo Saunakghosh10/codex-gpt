@@ -32,3 +32,4 @@ dist-ssr
 .env
 ../.env
 ../server/.env
+server/.env

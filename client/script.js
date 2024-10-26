@@ -66,7 +66,8 @@ const handleSubmit = async (e) => {
   loader(messageDiv);
 
   try {
-    const response = await fetch("https://codex-gpt-gj0p.onrender.com", {
+    // Updated server URL
+    const response = await fetch("https://codex-gpt-gj0p.onrender.com/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

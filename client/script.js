@@ -66,7 +66,6 @@ const handleSubmit = async (e) => {
   loader(messageDiv);
 
   try {
-    // Updated server URL
     const response = await fetch("https://codex-gpt-gj0p.onrender.com/api/chat", {
       method: "POST",
       headers: {
@@ -110,12 +109,12 @@ const handleSubmit = async (e) => {
     } else {
       const errorText = await response.text();
       console.error('Error response:', errorText);
-      messageDiv.innerHTML = `Error: ${errorText}`;
+      messageDiv.innerHTML = `Error: ${response.status} - ${errorText}`;
     }
   } catch (error) {
     clearInterval(loadInterval);
     console.error('Fetch error:', error);
-    messageDiv.innerHTML = `Error: ${error.message}`;
+    messageDiv.innerHTML = `Error: Unable to connect to the server. Please try again later.`;
   }
 };
 

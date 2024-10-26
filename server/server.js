@@ -6,11 +6,14 @@ import Replicate from "replicate";
 dotenv.config();
 
 const app = express();
+
+// Update CORS configuration
 app.use(cors({
-  origin: 'https://codex-gpt-pied.vercel.app', // Updated client URL
+  origin: ['https://codex-gpt-pied.vercel.app', 'http://localhost:5173'], // Add both production and development URLs
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 
 const replicate = new Replicate({
